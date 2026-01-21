@@ -1,0 +1,90 @@
+@startuml
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Container.puml
+
+title Gestión de Proyectos de Construcción - C2 Diagrama de Contenedores (v1.1.0)
+
+Person(cliente, "Cliente", "Dueño del proyecto de construcción")
+Person(contratista, "Contratista", "Ejecuta y gestiona trabajos del proyecto")
+Person(admin, "Administrador", "Gestiona usuarios, accesos y configuración del sistema")
+
+System_Boundary(gestionCSC, "Gestión de Proyectos de Construcción") {
+
+    Container(webAppOwner, "App Web Cliente", "Angular", "Interfaz web para los dueños del proyecto")
+
+    Container(webAppContratista, "App Web Contratista", "Angular", "Interfaz web para empresas contratistas")
+
+    Container(webAppAdmin, "App Web Administrador", "Angular", "Interfaz web para los administradores del sistema")
+
+    Container(apiGateway, "API Gateway", "Spring Cloud Gateway", "Punto de entrada único, validación de seguridad y ruteo")
+
+    Container(msIdentidad, "ms-identidad", "Spring Boot", "Autenticación, autorización y gestión de usuarios")
+
+    Container(msProyectos, "ms-proyectos", "Spring Boot", "Gestión del ciclo de vida del proyecto de construcción")
+
+    Container(msAbastecimiento, "ms-abastecimiento", "Spring Boot", "Gestión de inventarios, pedidos y control de materiales")
+
+    Container(msFinanza, "ms-finanzas", "Spring Boot", "Gestión de pagos, facturación y transacciones")
+
+    Container(eventBus, "Event Bus", "Apache Kafka", "Mensajería asíncrona para eventos de dominio")
+
+    ContainerDb(dbIdentidad, "DB Identidad", "PostgreSQL", "Usuarios, roles y credenciales")
+
+    ContainerDb(dbProyectos, "DB Proyectos", "PostgreSQL", "Proyectos, empresas y estados")
+
+    ContainerDb(dbMaterial, "DB Material", "PostgreSQL", "Inventario, órdenes y logística")
+
+    ContainerDb(dbFinanzas, "DB Finanzas", "PostgreSQL", "Pagos, facturación y transacciones")
+}
+
+System_Ext(storageProvider, "Servicio de Almacenamiento de archivos", "Documentos de la empresa y proyectos")
+
+System_Ext(notifProvider, "Servicio de Notificaciones", "SMS, Push, Email, WhatsApp")
+
+System_Ext(paymentGateway, "Pasarela de Pagos", "Procesamiento de pagos")
+
+System_Ext(transportProvider, "Proveedor de Transporte", "Transporte de materiales y equipos de construcción")
+
+System_Ext(materialSupplier, "Proveedor de Materiales", "Suministro de materiales y equipos de construcción")
+
+' Usuarios → Frontend
+Rel(cliente, webAppOwner, "Usa")
+Rel(contratista, webAppContratista, "Usa")
+Rel(admin, webAppAdmin, "Administra")
+
+' Frontend → Gateway (Sync)
+Rel(webAppOwner, apiGateway, "Consume API REST", "HTTPS/JSON")
+Rel(webAppContratista, apiGateway, "Consume API REST", "HTTPS/JSON")
+Rel(webAppAdmin, apiGateway, "Consume API REST", "HTTPS/JSON")
+
+' Gateway → Microservicios (Sync)
+Rel(apiGateway, msIdentidad, "Autentica y autoriza solicitudes")
+Rel(apiGateway, msProyectos, "Rutea comandos")
+Rel(apiGateway, msAbastecimiento, "Rutea comandos")
+Rel(apiGateway, msFinanza, "Rutea comandos")
+
+' Microservicios → Event Bus (Async)
+Rel(msProyectos, eventBus, "Publica eventos de dominio (cambios relevantes en el ciclo de vida del proyecto)")
+Rel(msAbastecimiento, eventBus, "Publica eventos de dominio (inventario, logística y órdenes de material)")
+
+' Event Bus → Microservicios (Async)
+Rel(eventBus, msAbastecimiento, "Consume eventos de dominio del proyecto")
+Rel(eventBus, msFinanza, "Consume eventos de dominio del proyecto y de materiales")
+
+' Microservicios → DB
+Rel(msIdentidad, dbIdentidad, "Lee/Escribe")
+Rel(msProyectos, dbProyectos, "Lee/Escribe")
+Rel(msAbastecimiento, dbMaterial, "Lee/Escribe")
+Rel(msFinanza, dbFinanzas, "Lee/Escribe")
+
+' Integraciones externas
+Rel(msProyectos, storageProvider, "Carga archivos")
+Rel(msIdentidad, notifProvider, "Notifica autenticación y seguridad")
+Rel(msAbastecimiento, notifProvider, "Notifica estados de envíos e inventario")
+Rel(msFinanza, notifProvider, "Notifica pagos y facturación")
+Rel(msFinanza, paymentGateway, "Procesa pagos")
+Rel(msAbastecimiento, transportProvider, "Solicita transporte")
+Rel(msAbastecimiento, materialSupplier, "Pide materiales")
+
+SHOW_LEGEND()
+@enduml

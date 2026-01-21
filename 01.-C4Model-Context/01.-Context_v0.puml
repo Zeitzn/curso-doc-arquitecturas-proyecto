@@ -1,0 +1,29 @@
+@startuml
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Context.puml
+
+title Identificación de Actores y Límites del Sistema\nGestión de Proyectos de Construcción
+
+System(gestionCSC, "Gestión de Proyectos de Construcción", "Plataforma para la gestión de la Cadena de Suministro en proyectos de Construcción")
+
+Person(cliente, "Cliente", "Dueño del proyecto de construcción")
+Person(usuario, "Usuario", "Proveedor/Contratista")
+Person(admin, "Administrador", "Gestiona usuarios, accesos y configuración del sistema")
+
+
+System_Ext(notifProvider, "Servicio de Notificaciones", "SMS, Push, Email, WhatsApp")
+System_Ext(paymentGateway, "Pasarela de Pagos", "Procesamiento de pagos")
+System_Ext(transportProvider, "Proveedor de Transporte", "Transporte de materiales y equipos de construcción")
+
+Rel(cliente, gestionCSC, "Consulta y da seguimiento a su proyecto de construcción")
+Rel(usuario, gestionCSC, "Gestiona proyectos, recursos y procesos")
+Rel(admin, gestionCSC, "Administra usuarios, accesos y configuración")
+
+
+Rel(gestionCSC, notifProvider, "Envía notificaciones")
+Rel(gestionCSC, paymentGateway, "Procesa pagos")
+Rel(gestionCSC, transportProvider, "Solicita transporte")
+
+
+SHOW_LEGEND()
+@enduml
